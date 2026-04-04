@@ -1,0 +1,9 @@
+{
+  "description": "Project B baseline — naive pipeline, Session 2",
+  "total_queries": 15,
+  "classification_accuracy": 80.0,
+  "retrieval_hit_rate": 87.0,
+  "avg_faithfulness": 90.0,
+  "avg_correctness": 75.0,
+  "routing_accuracy": 46.7
+}
