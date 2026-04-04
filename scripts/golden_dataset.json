@@ -48,5 +48,275 @@
     "expected_escalation": true,
     "difficulty": "easy",
     "category": "damaged_delivery"
+  },
+  {
+    "id": "b06",
+    "query": "Can I return an opened laptop if I'm a Premium member?",
+    "expected_intent": "return_or_refund",
+    "expected_answer": "Yes. Premium Silver and Gold members may return opened electronics within their extended return window (45 or 60 days), provided the item is in functional condition with all original accessories included.",
+    "expected_source": "02_premium_membership.md",
+    "expected_escalation": false,
+    "difficulty": "medium",
+    "category": "returns"
+  },
+  {
+    "id": "b07",
+    "query": "What payment methods does Acmera accept?",
+    "expected_intent": "billing_or_payment",
+    "expected_answer": "Acmera accepts credit/debit cards (Visa, Mastercard, Amex, RuPay), UPI (Google Pay, PhonePe, Paytm, BHIM), net banking, Acmera Wallet, EMI on select products, and Cash on Delivery for orders between ₹200 and ₹25,000.",
+    "expected_source": "05_payment_methods.md",
+    "expected_escalation": false,
+    "difficulty": "easy",
+    "category": "billing"
+  },
+  {
+    "id": "b08",
+    "query": "How do I track my shipment?",
+    "expected_intent": "order_status",
+    "expected_answer": "Track your order in real time through the Acmera app or website. You will also receive automated email and SMS updates when your order is confirmed, shipped, out for delivery, and delivered.",
+    "expected_source": "06_support_faq.md",
+    "expected_escalation": false,
+    "difficulty": "easy",
+    "category": "order_status"
+  },
+  {
+    "id": "b09",
+    "query": "I received the wrong item in my order",
+    "expected_intent": "order_status",
+    "expected_answer": "Contact support immediately with your order number and a photo of the item received. Acmera will arrange a pickup of the wrong item and ship the correct one at no extra cost.",
+    "expected_source": "06_support_faq.md",
+    "expected_escalation": true,
+    "difficulty": "medium",
+    "category": "fulfillment_error"
+  },
+  {
+    "id": "b10",
+    "query": "What is the standard warranty on electronics?",
+    "expected_intent": "product_info",
+    "expected_answer": "All electronics sold by Acmera include a minimum 1-year manufacturer warranty covering defects in materials and workmanship under normal use. Warranty claims must be initiated through Acmera's support team.",
+    "expected_source": "04_warranty_policy.md",
+    "expected_escalation": false,
+    "difficulty": "easy",
+    "category": "warranty"
+  },
+  {
+    "id": "b11",
+    "query": "How do I become a Premium Silver member?",
+    "expected_intent": "membership",
+    "expected_answer": "Premium Silver is automatically granted after spending ₹25,000 in a calendar year or maintaining an active Acmera account for 2 or more years.",
+    "expected_source": "02_premium_membership.md",
+    "expected_escalation": false,
+    "difficulty": "easy",
+    "category": "membership"
+  },
+  {
+    "id": "b12",
+    "query": "Someone else seems to be logged into my account",
+    "expected_intent": "general",
+    "expected_answer": "Suspicious login attempts trigger an automatic account lock. You must verify your identity through your registered email to unlock the account. Contact support immediately if you did not initiate the activity.",
+    "expected_source": "10_account_management.md",
+    "expected_escalation": true,
+    "difficulty": "medium",
+    "category": "account_security"
+  },
+  {
+    "id": "b13",
+    "query": "Can I get same-day delivery in Bangalore?",
+    "expected_intent": "order_status",
+    "expected_answer": "Yes. Same-day delivery is available in Bangalore. Orders placed before 12:00 PM are delivered by 9:00 PM the same day. The cost is ₹399 for all customers.",
+    "expected_source": "03_shipping_policy.md",
+    "expected_escalation": false,
+    "difficulty": "easy",
+    "category": "shipping"
+  },
+  {
+    "id": "b14",
+    "query": "I want to buy the extended warranty for my phone, is it too late?",
+    "expected_intent": "product_info",
+    "expected_answer": "Extended warranty plans can be purchased at the time of purchase or within 30 days of delivery. If you are still within that window, you can add Acmera Shield (2-year, 8% of product price) or Acmera Shield Plus (3-year with accidental damage, 12% of product price).",
+    "expected_source": "04_warranty_policy.md",
+    "expected_escalation": false,
+    "difficulty": "medium",
+    "category": "warranty"
+  },
+  {
+    "id": "b15",
+    "query": "My refund was supposed to arrive 10 days ago and still hasn't",
+    "expected_intent": "billing_or_payment",
+    "expected_answer": "Card refunds take 5-7 business days after processing and net banking takes 7-10 business days. If the return was received at the warehouse and it has been more than 7 business days since processing, contact support with your return tracking number.",
+    "expected_source": "06_support_faq.md",
+    "expected_escalation": true,
+    "difficulty": "medium",
+    "category": "billing"
+  },
+  {
+    "id": "b16",
+    "query": "Do sale items have a different return window?",
+    "expected_intent": "return_or_refund",
+    "expected_answer": "Yes. Items bought during promotional events like flash sales or clearance have a reduced 15-day return window and may carry a 10% restocking fee. Premium members are exempt from both the reduced window and the restocking fee.",
+    "expected_source": "06_support_faq.md",
+    "expected_escalation": false,
+    "difficulty": "medium",
+    "category": "returns"
+  },
+  {
+    "id": "b17",
+    "query": "I bought a laptop during the Diwali sale and it stopped working after 20 days",
+    "expected_intent": "product_info",
+    "expected_answer": "A defective product is covered under the 1-year manufacturer warranty regardless of when it was purchased. Initiate a warranty claim through Acmera support with your order number. The team will attempt remote diagnosis; if unresolved, a prepaid label will be sent for repair or replacement.",
+    "expected_source": "04_warranty_policy.md",
+    "expected_escalation": true,
+    "difficulty": "hard",
+    "category": "warranty"
+  },
+  {
+    "id": "b18",
+    "query": "What are the benefits for Premium Gold members?",
+    "expected_intent": "membership",
+    "expected_answer": "Premium Gold benefits include: free express shipping on all orders, priority 4-hour order processing, 48-hour early sale access plus a quarterly 15% discount code, 60-day return window, unlimited free return shipping, refunds within 2 business days, instant wallet credit option, a dedicated account manager, and 24/7 direct phone support.",
+    "expected_source": "02_premium_membership.md",
+    "expected_escalation": false,
+    "difficulty": "medium",
+    "category": "membership"
+  },
+  {
+    "id": "b19",
+    "query": "My wallet balance disappeared after I requested account deletion",
+    "expected_intent": "billing_or_payment",
+    "expected_answer": "Account deletion is permanent and irreversible. All order history, wallet balance, and Premium membership status are lost upon deletion. Wallet balance cannot be withdrawn as cash or transferred before deletion.",
+    "expected_source": "10_account_management.md",
+    "expected_escalation": true,
+    "difficulty": "hard",
+    "category": "billing"
+  },
+  {
+    "id": "b20",
+    "query": "Can I return a gift card?",
+    "expected_intent": "return_or_refund",
+    "expected_answer": "No. Opened software, digital downloads, and gift cards are not returnable under any circumstances.",
+    "expected_source": "01_return_policy.md",
+    "expected_escalation": false,
+    "difficulty": "easy",
+    "category": "returns"
+  },
+  {
+    "id": "b21",
+    "query": "Is COD available on a ₹30,000 order?",
+    "expected_intent": "billing_or_payment",
+    "expected_answer": "No. Cash on Delivery is only available for orders between ₹200 and ₹25,000. Your order of ₹30,000 exceeds the COD limit, so you would need to use another payment method such as UPI, card, or net banking.",
+    "expected_source": "05_payment_methods.md",
+    "expected_escalation": false,
+    "difficulty": "easy",
+    "category": "billing"
+  },
+  {
+    "id": "b22",
+    "query": "I placed an order but the address is wrong and it has already shipped",
+    "expected_intent": "order_status",
+    "expected_answer": "Address changes are only possible before the order is shipped. Once the package has been handed to the carrier, the delivery address cannot be modified. Contact support — they may be able to coordinate with the carrier, but this is not guaranteed.",
+    "expected_source": "06_support_faq.md",
+    "expected_escalation": true,
+    "difficulty": "medium",
+    "category": "order_status"
+  },
+  {
+    "id": "b23",
+    "query": "How long does it take to process a return refund for Premium members?",
+    "expected_intent": "return_or_refund",
+    "expected_answer": "Refunds for Premium members are processed within 2 business days of the item being received at the warehouse, compared to 5-7 business days for standard customers. Premium Gold members can also request an instant store credit refund upon return shipment tracking confirmation.",
+    "expected_source": "02_premium_membership.md",
+    "expected_escalation": false,
+    "difficulty": "easy",
+    "category": "returns"
+  },
+  {
+    "id": "b24",
+    "query": "What is the Acmera Shield Plus warranty plan?",
+    "expected_intent": "product_info",
+    "expected_answer": "Acmera Shield Plus extends total coverage to 4 years and includes accidental damage protection. It costs 12% of the product price and must be purchased at the time of purchase or within 30 days of delivery. It is non-refundable and non-transferable.",
+    "expected_source": "04_warranty_policy.md",
+    "expected_escalation": false,
+    "difficulty": "easy",
+    "category": "warranty"
+  },
+  {
+    "id": "b25",
+    "query": "My package shows delivered but I never received it",
+    "expected_intent": "order_status",
+    "expected_answer": "File a claim within 7 days of the marked delivery date. Acmera's logistics team will investigate with the carrier. If the package cannot be located, a full refund or replacement will be issued within 10 business days.",
+    "expected_source": "03_shipping_policy.md",
+    "expected_escalation": true,
+    "difficulty": "medium",
+    "category": "lost_delivery"
+  },
+  {
+    "id": "b26",
+    "query": "Can I get a refund to a different bank account than the one I paid with?",
+    "expected_intent": "billing_or_payment",
+    "expected_answer": "No. Refunds are always issued to the original payment method used for the purchase. The only exception is that Premium Gold members may opt to receive the refund as instant Acmera Wallet credit instead.",
+    "expected_source": "06_support_faq.md",
+    "expected_escalation": false,
+    "difficulty": "medium",
+    "category": "billing"
+  },
+  {
+    "id": "b27",
+    "query": "I accidentally deleted my account and lost my Premium Gold status and order history",
+    "expected_intent": "general",
+    "expected_answer": "Account deletion is permanent and irreversible. All order history, wallet balance, and Premium membership status are lost. There is no recovery option once an account is deleted.",
+    "expected_source": "10_account_management.md",
+    "expected_escalation": true,
+    "difficulty": "hard",
+    "category": "account_security"
+  },
+  {
+    "id": "b28",
+    "query": "Do Premium members get faster shipping?",
+    "expected_intent": "membership",
+    "expected_answer": "Yes. Premium Silver members get free standard shipping on orders over ₹500 with priority processing (orders shipped within 4 hours on business days). Premium Gold members receive free express shipping on all orders regardless of value.",
+    "expected_source": "02_premium_membership.md",
+    "expected_escalation": false,
+    "difficulty": "easy",
+    "category": "membership"
+  },
+  {
+    "id": "b29",
+    "query": "My promotional wallet credit expired before I could use it",
+    "expected_intent": "billing_or_payment",
+    "expected_answer": "Promotional wallet credits have a 90-day expiry from the date of issue. Once expired, they cannot be reinstated. Regular wallet balance does not expire as long as the account remains active.",
+    "expected_source": "13_acmera_wallet.md",
+    "expected_escalation": false,
+    "difficulty": "medium",
+    "category": "billing"
+  },
+  {
+    "id": "b30",
+    "query": "I bought a phone during Christmas sale on December 20 — can I return it in February?",
+    "expected_intent": "return_or_refund",
+    "expected_answer": "Yes. Items purchased between November 15 and December 31 have an extended holiday return window until January 31 of the following year. However, a February return would fall outside this extended window. Unless you are a Premium member with an extended window of 45 or 60 days that covers that date, the return would not be eligible.",
+    "expected_source": "01_return_policy.md",
+    "expected_escalation": false,
+    "difficulty": "hard",
+    "category": "returns"
+  },
+  {
+    "id": "b31",
+    "query": "My EMI payment failed but I can see a deduction on my card statement",
+    "expected_intent": "billing_or_payment",
+    "expected_answer": "If a payment fails, no amount should be deducted. In rare cases where an amount is debited but the order is not confirmed, a refund is initiated automatically within 24 hours, with bank processing taking an additional 5-7 business days. Contact support with your order number and payment details if the automatic refund does not appear.",
+    "expected_source": "05_payment_methods.md",
+    "expected_escalation": true,
+    "difficulty": "hard",
+    "category": "billing"
+  },
+  {
+    "id": "b32",
+    "query": "Can I share my Premium Gold benefits with a family member?",
+    "expected_intent": "membership",
+    "expected_answer": "Premium benefits are tied to individual accounts and cannot be shared. However, Premium Gold members can add one secondary account holder who receives Premium Silver benefits. Contact your account manager to set this up.",
+    "expected_source": "06_support_faq.md",
+    "expected_escalation": false,
+    "difficulty": "medium",
+    "category": "membership"
   }
 ]
