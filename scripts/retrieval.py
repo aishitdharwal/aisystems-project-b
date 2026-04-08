@@ -1,10 +1,12 @@
 """
-Self-contained retrieval layer for Project B.
+Self-contained retrieval layer for Project B — Session 3 update.
 
-Duplicated from Project A's rag.py so Project B is a standalone repo.
-In Week 3, this gets replaced by the LangGraph agent's tool-based retrieval.
+New in Session 3:
+  - retrieve_filtered()   — pre-filter by doc_name before semantic search
+    Narrows the search space to the most relevant policy documents.
+    This is metadata filtering — a pre-retrieval routing technique.
 
-Not meant to be run directly — imported by support_pipeline.py and eval_harness.py.
+In Week 3, this module gets replaced by LangGraph tool-based retrieval.
 """
 import os
 import json
@@ -41,6 +43,7 @@ def embed_query(query):
 
 @observe(name="retrieval")
 def retrieve(query_embedding, top_k=TOP_K):
+    """Standard dense retrieval — no filtering."""
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -61,9 +64,59 @@ def retrieve(query_embedding, top_k=TOP_K):
     conn.close()
 
     langfuse_context.update_current_observation(metadata={
-        "top_k": top_k,
-        "results": [{"doc_name": r["doc_name"], "chunk_index": r["chunk_index"],
-                     "similarity": r["similarity"]} for r in results],
+        "top_k": top_k, "filter": None,
+        "results": [{"doc_name": r["doc_name"], "similarity": r["similarity"]} for r in results],
+    })
+    return results
+
+
+@observe(name="retrieval_filtered")
+def retrieve_filtered(query_embedding, doc_names: list[str], top_k=TOP_K):
+    """
+    Metadata-filtered dense retrieval.
+
+    Pre-filters to specific documents before semantic search.
+    This is pre-retrieval routing — same query, much smaller search space.
+
+    Why it helps: searching all 19 docs for "return window" might surface
+    promotional events or corporate gifting policy alongside the primary
+    return policy. Filtering to the 2-3 most relevant docs improves precision.
+
+    Args:
+        query_embedding: Dense query embedding
+        doc_names: List of doc filenames to search within
+        top_k: Number of results to return
+
+    Returns:
+        List of chunk dicts matching the filter
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    placeholders = ",".join(["%s"] * len(doc_names))
+    cur.execute(
+        f"""SELECT id, doc_name, chunk_index, content, metadata,
+                   1 - (embedding <=> %s::vector) AS similarity
+            FROM chunks
+            WHERE doc_name IN ({placeholders})
+            ORDER BY embedding <=> %s::vector
+            LIMIT %s""",
+        (query_embedding, *doc_names, query_embedding, top_k),
+    )
+    results = []
+    for row in cur.fetchall():
+        results.append({
+            "id": row[0], "doc_name": row[1], "chunk_index": row[2],
+            "content": row[3],
+            "metadata": row[4] if isinstance(row[4], dict) else json.loads(row[4]),
+            "similarity": round(float(row[5]), 4),
+        })
+    cur.close()
+    conn.close()
+
+    langfuse_context.update_current_observation(metadata={
+        "top_k": top_k, "filter": doc_names,
+        "results": [{"doc_name": r["doc_name"], "similarity": r["similarity"]} for r in results],
     })
     return results
 
