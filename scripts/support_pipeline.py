@@ -1,15 +1,15 @@
 """
-Project B: Customer Support Pipeline — Session 3 update: Tool Routing.
+Project B: Customer Support Pipeline — Session 4 update.
 
-New in Session 3:
-  - query_classifier.py determines WHICH TOOL to call
-  - Tool routing: policy_kb / order_tracker / account_lookup / multi_tool
-  - Policy retrieval now uses metadata filtering by intent
-  - mock_tools.py provides order_tracker and account_lookup implementations
-  - handle_query() now returns retrieved_chunks for eval harness
+New in Session 4:
+  - retrieve_policy() now uses retrieve_with_dedup() (FAQ deduplication)
+  - TOOL_DESCRIPTIONS are finalized — precise enough for Week 3 LangGraph
+  - handle_query() returns richer metadata for eval and debugging
 
-This is the proto-reasoning layer — the seed of the Week 3 LangGraph agent.
-The same tool selection logic becomes the agent's planning step in Week 3.
+Session 4 is the completion of the naive pipeline before the Week 3 agent
+rewrite. By the end of Session 4, the routing logic is solid, the tool
+descriptions are precise, and the retrieval is clean. Week 3 takes all
+of this and wraps it in a LangGraph reasoning loop.
 
 Run: python scripts/support_pipeline.py
 """
@@ -25,7 +25,7 @@ from langfuse import Langfuse
 from langfuse.decorators import observe, langfuse_context
 from dotenv import load_dotenv
 
-from retrieval import embed_query, retrieve, retrieve_filtered, assemble_context
+from retrieval import embed_query, retrieve, retrieve_filtered, retrieve_with_dedup, assemble_context
 from query_classifier import classify_tool, classify_tools_needed, TOOL_DESCRIPTIONS
 from mock_tools import lookup_order, lookup_account, format_tool_result
 
@@ -45,11 +45,10 @@ INTENTS = [
     "general",
 ]
 
-# Documents relevant to each intent — used for metadata pre-filtering
 INTENT_DOC_FILTERS = {
     "return_or_refund": [
-        "01_return_policy.md", "07_promotional_events.md", "12_corporate_gifting.md",
-        "04_warranty_policy.md",
+        "01_return_policy.md", "07_promotional_events.md",
+        "12_corporate_gifting.md", "04_warranty_policy.md",
     ],
     "order_status": [
         "03_shipping_policy.md", "06_support_faq.md",
@@ -64,7 +63,7 @@ INTENT_DOC_FILTERS = {
     "membership": [
         "02_premium_membership.md", "06_support_faq.md",
     ],
-    "general": None,  # No filter — search all docs
+    "general": None,
 }
 
 SYSTEM_PROMPT = """You are a customer support assistant for Acmera, an Indian e-commerce company.
@@ -106,48 +105,33 @@ def classify_intent(query: str) -> str:
 @observe(name="retrieve_policy")
 def retrieve_policy(query: str, intent: str) -> tuple[str, list]:
     """
-    Retrieve policy context with metadata pre-filtering by intent.
-    Narrows the search space to the most relevant documents before semantic search.
+    Retrieve policy context with metadata filtering + FAQ deduplication.
 
-    Returns:
-        (context_str, retrieved_chunks)
+    Session 4 improvement: retrieve_with_dedup() fetches more candidates
+    and removes near-duplicate chunks before assembly. Common in support
+    corpora where the same policy appears in multiple documents.
     """
     doc_filter = INTENT_DOC_FILTERS.get(intent)
     query_embedding = embed_query(query)
 
-    if doc_filter:
-        chunks = retrieve_filtered(query_embedding, doc_filter)
-        if not chunks:  # Fallback: unfiltered search if nothing matched
-            chunks = retrieve(query_embedding)
-    else:
-        chunks = retrieve(query_embedding)
+    chunks = retrieve_with_dedup(query_embedding, doc_names=doc_filter)
+    if not chunks:
+        chunks = retrieve_with_dedup(query_embedding, doc_names=None)
 
     context = assemble_context(chunks)
     langfuse_context.update_current_observation(metadata={
-        "intent": intent,
-        "doc_filter": doc_filter,
-        "num_chunks": len(chunks),
+        "intent": intent, "doc_filter": doc_filter, "num_chunks": len(chunks),
     })
     return context, chunks
 
 
 @observe(name="call_tool")
 def call_tool(tool: str, query: str, intent: str) -> tuple[str, list]:
-    """
-    Execute a tool and return the result as context string + chunk list.
-
-    For policy_kb: RAG retrieval (same as before but with filtering)
-    For order_tracker: mock order lookup
-    For account_lookup: mock account lookup
-    For multi_tool: call multiple tools and combine results
-    """
     if tool == "policy_kb":
         context, chunks = retrieve_policy(query, intent)
         return context, chunks
 
     elif tool == "order_tracker":
-        # In production: parse order ID from query or user session
-        # Here: look up the first order as a demo (real system would extract order ID)
         result = lookup_order("ORD-445521")
         context = format_tool_result("order_tracker", result)
         langfuse_context.update_current_observation(metadata={"tool": "order_tracker"})
@@ -179,10 +163,7 @@ def generate_response(query: str, context: str, intent: str) -> str:
         {"role": "user", "content": query},
     ]
     response = client.chat.completions.create(
-        model=GENERATION_MODEL,
-        messages=messages,
-        temperature=0,
-        max_tokens=800,
+        model=GENERATION_MODEL, messages=messages, temperature=0, max_tokens=800,
     )
     answer = response.choices[0].message.content
     langfuse_context.update_current_observation(
@@ -191,8 +172,7 @@ def generate_response(query: str, context: str, intent: str) -> str:
         usage={
             "input": response.usage.prompt_tokens,
             "output": response.usage.completion_tokens,
-            "total": response.usage.total_tokens,
-            "unit": "TOKENS",
+            "total": response.usage.total_tokens, "unit": "TOKENS",
         },
     )
     return answer
@@ -202,12 +182,13 @@ def generate_response(query: str, context: str, intent: str) -> str:
 def handle_query(query: str) -> dict:
     """
     Full support pipeline:
-      classify intent → route to tool → retrieve context → generate response
+      classify intent → route to tool → retrieve (with dedup) → generate
 
-    Returns dict compatible with eval_harness.py expectations.
+    Session 4: cleaner retrieval via deduplication, finalized TOOL_DESCRIPTIONS
+    ready for Week 3 LangGraph handoff.
     """
     start_time = time.time()
-    langfuse_context.update_current_trace(input=query, metadata={"pipeline": "tool_routing"})
+    langfuse_context.update_current_trace(input=query, metadata={"pipeline": "tool_routing_v2"})
 
     intent = classify_intent(query)
     tool = classify_tool(query, intent)
@@ -216,8 +197,7 @@ def handle_query(query: str) -> dict:
 
     elapsed = round(time.time() - start_time, 2)
     langfuse_context.update_current_trace(
-        output=answer,
-        metadata={"intent": intent, "tool": tool, "elapsed": elapsed},
+        output=answer, metadata={"intent": intent, "tool": tool, "elapsed": elapsed},
     )
     trace_id = langfuse_context.get_current_trace_id()
     langfuse.flush()
@@ -235,15 +215,20 @@ def handle_query(query: str) -> dict:
 
 
 if __name__ == "__main__":
+    print("Tool Descriptions (Week 3 handoff — these become LangGraph tool definitions):\n")
+    for tool, desc in TOOL_DESCRIPTIONS.items():
+        print(f"  {tool}:\n    {desc}\n")
+
     test_queries = [
         ("What is the return window for electronics?", "policy query"),
         ("Where is my order ORD-445521?", "order lookup"),
-        ("I'm a Premium Gold member — do I get free express shipping?", "account query"),
-        ("I want to return the laptop I bought last week", "return — policy + account"),
+        ("I'm Premium Gold — what's my return window?", "account + policy"),
+        ("send me my money back", "vocab mismatch — return_or_refund"),
     ]
+    print("\nTest queries:\n")
     for query, label in test_queries:
-        print(f"\n[{label}] {query}")
         result = handle_query(query)
+        print(f"[{label}] {query}")
         print(f"  Intent: {result['intent']} → Tool: {result['tool_used']}")
-        print(f"  Answer: {result['answer'][:200]}...")
-        print(f"  Trace: {result['trace_id']}")
+        print(f"  Answer: {result['answer'][:180]}...")
+        print()

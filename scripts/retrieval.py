@@ -1,10 +1,10 @@
 """
-Self-contained retrieval layer for Project B — Session 3 update.
+Self-contained retrieval layer for Project B — Session 4 update.
 
-New in Session 3:
-  - retrieve_filtered()   — pre-filter by doc_name before semantic search
-    Narrows the search space to the most relevant policy documents.
-    This is metadata filtering — a pre-retrieval routing technique.
+New in Session 4:
+  - deduplicate_chunks()  — removes near-identical chunks before assembly
+    Common in support corpora where the same policy appears in multiple docs.
+  - retrieve_with_dedup() — convenience: retrieve + deduplicate in one call
 
 In Week 3, this module gets replaced by LangGraph tool-based retrieval.
 """
@@ -73,22 +73,8 @@ def retrieve(query_embedding, top_k=TOP_K):
 @observe(name="retrieval_filtered")
 def retrieve_filtered(query_embedding, doc_names: list[str], top_k=TOP_K):
     """
-    Metadata-filtered dense retrieval.
-
+    Metadata-filtered dense retrieval (Session 3).
     Pre-filters to specific documents before semantic search.
-    This is pre-retrieval routing — same query, much smaller search space.
-
-    Why it helps: searching all 19 docs for "return window" might surface
-    promotional events or corporate gifting policy alongside the primary
-    return policy. Filtering to the 2-3 most relevant docs improves precision.
-
-    Args:
-        query_embedding: Dense query embedding
-        doc_names: List of doc filenames to search within
-        top_k: Number of results to return
-
-    Returns:
-        List of chunk dicts matching the filter
     """
     conn = get_connection()
     cur = conn.cursor()
@@ -119,6 +105,67 @@ def retrieve_filtered(query_embedding, doc_names: list[str], top_k=TOP_K):
         "results": [{"doc_name": r["doc_name"], "similarity": r["similarity"]} for r in results],
     })
     return results
+
+
+def deduplicate_chunks(chunks: list, similarity_threshold: float = 0.75) -> list:
+    """
+    Remove near-duplicate chunks using word-level Jaccard similarity (Session 4).
+
+    Support corpora often have the same policy text repeated across multiple
+    documents (e.g., the 30-day return window appears in return_policy.md AND
+    support_faq.md AND corporate_gifting.md). Deduplication prevents the LLM
+    from seeing the same fact three times, wasting context budget.
+
+    Args:
+        chunks: List of retrieved chunk dicts
+        similarity_threshold: Jaccard threshold — 0.75 means 75% word overlap
+
+    Returns:
+        Deduplicated list preserving original relevance order
+    """
+    seen_words = []
+    unique = []
+
+    for chunk in chunks:
+        words = set(chunk["content"].lower().split())
+        is_dup = False
+        for seen in seen_words:
+            if not words or not seen:
+                continue
+            intersection = len(words & seen)
+            union = len(words | seen)
+            if union > 0 and intersection / union >= similarity_threshold:
+                is_dup = True
+                break
+        if not is_dup:
+            unique.append(chunk)
+            seen_words.append(words)
+
+    return unique
+
+
+def retrieve_with_dedup(query_embedding, doc_names: list[str] | None = None,
+                        top_k: int = TOP_K + 3) -> list:
+    """
+    Retrieve more candidates than needed, then deduplicate down to top_k.
+    The extra candidates compensate for chunks that will be removed as duplicates.
+
+    Args:
+        query_embedding: Dense query embedding
+        doc_names: Optional filter (None = search all docs)
+        top_k: How many unique chunks to return after dedup
+
+    Returns:
+        Deduplicated list of chunks
+    """
+    candidates_needed = top_k + 3  # Fetch extra to absorb dedup losses
+    if doc_names:
+        candidates = retrieve_filtered(query_embedding, doc_names, top_k=candidates_needed)
+    else:
+        candidates = retrieve(query_embedding, top_k=candidates_needed)
+
+    deduped = deduplicate_chunks(candidates)
+    return deduped[:top_k]
 
 
 @observe(name="context_assembly")
